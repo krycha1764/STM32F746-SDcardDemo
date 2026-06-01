@@ -2,6 +2,10 @@ design assumptions:
 
 command:
 
+help
+man jak nas poniesie
+whatis jak nas bardzo poniesie
+
 1. Nawigacja i przeglądanie struktury
 
     + pwd - Print the current directory - trzeba to ogarnąć na mikrokontrolerze żeby pamiętał gdzie aktualnie jesteśmy
