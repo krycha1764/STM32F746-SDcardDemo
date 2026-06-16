@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include "fatfs_platform.h"
 #include "stm32746g_discovery_lcd.h"
+#include "LCD_CLI.h"
 
 /* USER CODE END Includes */
 
@@ -161,10 +162,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  BSP_LCD_Clear(LCD_COLOR_RED);
-	  HAL_Delay(1000);
-	  BSP_LCD_Clear(LCD_COLOR_BLUE);
-	  HAL_Delay(1000);
 
     /* USER CODE END WHILE */
 
