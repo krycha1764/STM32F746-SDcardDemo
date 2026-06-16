@@ -130,22 +130,19 @@ int main(void)
 
   while(BSP_PlatformIsDetected() != SD_PRESENT)
   {
-	  textlen = sprintf(text, "Please insert SD Card...\r\n");
-	  HAL_UART_Transmit(&huart1, (uint8_t*)text, textlen, 10);
+	  LCD_CLI_Print("Please insert SD Card...\n", LCD_COLOR_RED);
 	  HAL_Delay(500);
   }
   HAL_SD_Init(&hsd1);
-  //BSP_SD_Init();
-  //FATFS_LinkDriver(&SD_Driver, SDPath);
 
   HAL_SD_CardInfoTypeDef sdinfo;
   HAL_SD_GetCardInfo(&hsd1, &sdinfo);
   uint64_t sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
   uint32_t sdsizeMB = sdsize/(1024*1024);
 
-  textlen = sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"
+  textlen = sprintf(text, "SD Card info:\n\tType: %lu\n\tClass: %lu\n\tSize: %lu MiB\n"
 		  , sdinfo.CardType, sdinfo.Class, sdsizeMB);
-  HAL_UART_Transmit(&huart1, (uint8_t*) text, textlen, 10);
+  LCD_CLI_Print(text, LCD_COLOR_WHITE);
 
   FIL file;
   fr = f_mount(&fs, SDPath, 0);
@@ -156,13 +153,13 @@ int main(void)
   fr = f_printf(&file, "Hello\r\n");
   fr = f_sync(&file);
   fr = f_close(&file);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
