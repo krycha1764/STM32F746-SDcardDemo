@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include "LCD_CLI.h"
+
 #define CLI_CR                      '\r'
 #define CLI_LF                      '\n'
 #define CLI_BS                      0x08U
@@ -140,6 +142,7 @@ static void CLI_TxTriggerFromContext(void)
 static void CLI_TxEnqueueByte(uint8_t byte)
 {
     uint16_t next;
+    LCD_CLI_PutChar((char)byte, LCD_COLOR_WHITE);
 
     __disable_irq();
     next = (uint16_t)((s_tx_head + 1U) % CLI_TX_BUFFER_SIZE);
@@ -615,6 +618,7 @@ void CLI_Print(const char *text)
         return;
     }
 
+    //LCD_CLI_Print(text, LCD_COLOR_WHITE);
     CLI_TxEnqueueBuffer((const uint8_t *)text, (uint16_t)len);
 }
 

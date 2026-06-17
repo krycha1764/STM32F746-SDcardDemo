@@ -9,7 +9,6 @@
 
 #include "dma2d.h"
 #include <string.h>
-#include "stm32746g_discovery_lcd.h"
 
 static int16_t column = 0;
 
@@ -32,10 +31,10 @@ void LCD_CLI_NL() {
 
 	HAL_DMA2D_Init(&hdma2d);
 	HAL_DMA2D_ConfigLayer(&hdma2d, 1);
-	HAL_DMA2D_Start(&hdma2d, (uint32_t)0xC0000000 + (4*(480*17)), (uint32_t)0xC0000000, 480, 252);
+	HAL_DMA2D_Start(&hdma2d, (uint32_t)0xC0000000 + (4*(480*16)), (uint32_t)0xC0000000, 480, 256);
 	HAL_DMA2D_PollForTransfer(&hdma2d, 10);
 
-	LL_FillBuffer(1,(uint32_t*)(0xC0000000 + (4*480*21*12)) , 480, 17, 0, LCD_COLOR_BLACK);
+	LL_FillBuffer(1,(uint32_t*)(0xC0000000 + (4*480*16*16)) , 480, 16, 0, LCD_COLOR_BLACK);
 	column = 0;
 }
 
@@ -54,21 +53,30 @@ void LCD_CLI_PutChar(char c, uint32_t color) {
 	case '\b':
 		column--;
 		if(column < 0) column = 0;
+		break;
 	case '\t':
 		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
 		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
 		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
 		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
+		break;
 	default:
 		BSP_LCD_SetTextColor(color);
 		BSP_LCD_DisplayChar(column*11, LINE(16), c);
 		column++;
+		break;
 	}
 }
 
 void LCD_CLI_Print(const char* c, uint32_t color) {
 	for(uint16_t i = 0; i < strlen(c); i++) {
 		LCD_CLI_PutChar(c[i], color);
+	}
+}
+
+void LCD_CLI_Write(uint8_t* data, uint16_t len, uint32_t color) {
+	for(uint16_t i = 0; i < len; i++) {
+		LCD_CLI_PutChar((char)data[i], color);
 	}
 }
 

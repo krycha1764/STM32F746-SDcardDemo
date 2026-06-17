@@ -6,7 +6,6 @@ HAL_StatusTypeDef CLI_Port_Write(UART_HandleTypeDef *huart, const uint8_t *data,
     {
         return HAL_ERROR;
     }
-
     return HAL_UART_Transmit(huart, (uint8_t *)data, (uint16_t)len, timeout_ms);
 }
 
