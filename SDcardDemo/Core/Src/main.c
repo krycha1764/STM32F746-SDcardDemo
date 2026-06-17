@@ -180,7 +180,7 @@ int main(void)
   uint64_t sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
   uint32_t sdsizeMB = sdsize/(1024*1024);
 
-  textlen = sprintf(text, "SD Card info:\n\tType: %lu\n\tClass: %lu\n\tSize: %lu MiB\n"
+  textlen = sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"
 		  , sdinfo.CardType, sdinfo.Class, sdsizeMB);
   CLI_Print(text);
 
