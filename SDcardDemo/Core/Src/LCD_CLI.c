@@ -40,6 +40,10 @@ void LCD_CLI_NL() {
 }
 
 void LCD_CLI_PutChar(char c, uint32_t color) {
+	if(column >= 43) {
+		LCD_CLI_NL();
+		column = 0;
+	}
 	BSP_LCD_SetTextColor(color);
 	BSP_LCD_DisplayChar(column*11, LINE(16), c);
 	column++;
