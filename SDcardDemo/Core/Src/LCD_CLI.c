@@ -44,35 +44,31 @@ void LCD_CLI_PutChar(char c, uint32_t color) {
 		LCD_CLI_NL();
 		column = 0;
 	}
-	BSP_LCD_SetTextColor(color);
-	BSP_LCD_DisplayChar(column*11, LINE(16), c);
-	column++;
+
+	switch(c) {
+	case '\n':
+		LCD_CLI_NL();
+		break;
+	case '\r':
+		break;
+	case '\b':
+		column--;
+		if(column < 0) column = 0;
+	case '\t':
+		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
+		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
+		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
+		LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
+	default:
+		BSP_LCD_SetTextColor(color);
+		BSP_LCD_DisplayChar(column*11, LINE(16), c);
+		column++;
+	}
 }
 
 void LCD_CLI_Print(const char* c, uint32_t color) {
 	for(uint16_t i = 0; i < strlen(c); i++) {
-		switch(c[i]) {
-		case '\n':
-			LCD_CLI_NL();
-			break;
-		case '\r':
-			break;
-		case '\b':
-			column--;
-			if(column < 0) column = 0;
-			LCD_CLI_PutChar(' ', LCD_COLOR_BLACK);
-			column--;
-			if(column < 0) column = 0;
-			break;
-		case '\t':
-			LCD_CLI_PutChar(' ', color);
-			LCD_CLI_PutChar(' ', color);
-			LCD_CLI_PutChar(' ', color);
-			LCD_CLI_PutChar(' ', color);
-			break;
-		default:
-			LCD_CLI_PutChar(c[i], color);
-		}
+		LCD_CLI_PutChar(c[i], color);
 	}
 }
 
