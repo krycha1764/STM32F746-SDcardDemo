@@ -31,9 +31,11 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "fatfs_platform.h"
 #include "stm32746g_discovery_lcd.h"
 #include "LCD_CLI.h"
+#include "cli.h"
 
 /* USER CODE END Includes */
 
@@ -59,6 +61,39 @@ FATFS fs;
 FRESULT fr;
 size_t textlen = 0;
 char text[512] = {0};
+
+//static void App_CmdVersion(int argc, char **argv);
+//static void App_CmdReset(int argc, char **argv);
+//static void App_CmdInfo(int argc, char **argv);
+static void App_CmdSdStatus(int argc, char **argv);
+//static void App_CmdPath(int argc, char **argv);
+//static void App_CmdType(int argc, char **argv);
+//static void App_CmdAppend(int argc, char **argv);
+//static void App_CmdWrite(int argc, char **argv);
+//static void App_CmdDelete(int argc, char **argv);
+
+static const CLI_Command app_commands[] = {
+//  {"version", App_CmdVersion, "Show firmware version"},
+//  {"reset", App_CmdReset, "Perform MCU reset"},
+//  {"info", App_CmdInfo, "Show system information"},
+  {"sd", App_CmdSdStatus, "sd status - show SD card info"},
+//  {"ls", App_CmdPath, "ls [path] - list files in directory"},
+//  {"type", App_CmdType, "type <file-name> - print file contents"},
+//  {"append", App_CmdAppend, "append <file-name> <text> - append text to file"},
+//  {"write", App_CmdWrite, "write <file-name> <text> - create/overwrite file with text"},
+//  {"delete", App_CmdDelete, "delete <file-name> - remove file"}
+};
+// Polecenie CLI: sd status
+static void App_CmdSdStatus(int argc, char **argv)
+{
+    if (argc < 2 || strcmp(argv[1], "status") != 0) {
+    CLI_Print("Usage: sd status\r\n");
+    return;
+  }
+
+  CLI_Print("Work in progress...\r\n");
+
+}
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,9 +163,14 @@ int main(void)
   BSP_LCD_SetFont(&Font16);
   BSP_LCD_Clear(LCD_COLOR_BLACK);
 
+  CLI_Init(&huart1);
+  CLI_RegisterCommands(app_commands, (uint16_t)(sizeof(app_commands) / sizeof(app_commands[0])));
+  CLI_StartReception();
+
   while(BSP_PlatformIsDetected() != SD_PRESENT)
   {
-	  LCD_CLI_Print("Please insert SD Card...\n", LCD_COLOR_RED);
+	  textlen = sprintf(text, "Please insert SD Card...\r\n");
+	  CLI_Print(text);
 	  HAL_Delay(500);
   }
   HAL_SD_Init(&hsd1);
@@ -142,7 +182,8 @@ int main(void)
 
   textlen = sprintf(text, "SD Card info:\n\tType: %lu\n\tClass: %lu\n\tSize: %lu MiB\n"
 		  , sdinfo.CardType, sdinfo.Class, sdsizeMB);
-  LCD_CLI_Print(text, LCD_COLOR_WHITE);
+  CLI_Print(text);
+
 
   FIL file;
   fr = f_mount(&fs, SDPath, 0);
@@ -154,12 +195,14 @@ int main(void)
   fr = f_sync(&file);
   fr = f_close(&file);
 
+  CLI_PrintPrompt();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  CLI_Process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -250,7 +293,15 @@ void PeriphCommonClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  CLI_RxCpltCallback(huart);
+}
 
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  CLI_TxCpltCallback(huart);
+}
 /* USER CODE END 4 */
 
 /**
