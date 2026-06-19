@@ -57,6 +57,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+uint32_t __attribute__((section(".ExternalRAMMemory"))) framebuffer[RK043FN48H_WIDTH * RK043FN48H_HEIGHT];
+
 FATFS fs;
 FRESULT fr;
 size_t textlen = 0;
@@ -156,7 +159,7 @@ int main(void)
   BSP_SDRAM_Init();
   BSP_LCD_Init();
 
-  BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+  BSP_LCD_LayerDefaultInit(0, (uint32_t)framebuffer);
   BSP_LCD_DisplayOn();
   BSP_LCD_SelectLayer(0);
   BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
