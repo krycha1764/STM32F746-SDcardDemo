@@ -36,6 +36,7 @@
 #include "stm32746g_discovery_lcd.h"
 #include "LCD_CLI.h"
 #include "cli.h"
+#include "image.h"
 
 /* USER CODE END Includes */
 
@@ -199,6 +200,7 @@ int main(void)
   fr = f_close(&file);
 
   CLI_PrintPrompt();
+  LCD_Display_image("papaj.bmp");
   /* USER CODE END 2 */
 
   /* Infinite loop */
