@@ -66,7 +66,7 @@ FRESULT fr;
 size_t textlen = 0;
 uint64_t sdsize = 0;
 uint32_t sdsizeMB = 0;
-char text[512] = {0};
+char text[1024] = {0};
 char version[128] = "0.1.1";
 
 static void App_CmdVersion(int argc, char **argv);
@@ -157,7 +157,7 @@ static void App_CmdSdLS(int argc, char **argv){
 	            CLI_Print(text);
 	        } else {
 
-	            textlen=sprintf(text,"  %9llu b  %s\r\n", fno.fsize, fno.fname);
+	            textlen=sprintf(text,"  %lu B  %s\r\n", (uint32_t)fno.fsize, fno.fname);
 	            CLI_Print(text);
 	        }
 	    }
