@@ -36,6 +36,7 @@
 #include "stm32746g_discovery_lcd.h"
 #include "LCD_CLI.h"
 #include "cli.h"
+#include "image.h"
 
 /* USER CODE END Includes */
 
@@ -57,10 +58,15 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+uint32_t __attribute__((section(".ExternalRAMMemory"))) framebuffer[RK043FN48H_WIDTH * RK043FN48H_HEIGHT];
+
 FATFS fs;
 FRESULT fr;
 size_t textlen = 0;
-char text[512] = {0};
+uint64_t sdsize = 0;
+uint32_t sdsizeMB = 0;
+char text[1024] = {0};
 char version[128] = "0.1.1";
 
 static void App_CmdVersion(int argc, char **argv);
@@ -69,7 +75,7 @@ static void App_CmdSdPWD(int argc, char **argv);
 static void App_CmdSdStatus(int argc, char **argv);
 static void App_CmdSdLS(int argc, char **argv);
 static void App_CmdSdCD(int argc, char **argv);
-static void App_CmdSdTUCH(int argc, char **argv);
+static void App_CmdSdTOUCH(int argc, char **argv);
 static void App_CmdSdMKDIR(int argc, char **argv);
 static void App_CmdSdRM(int argc, char **argv);
 static void App_CmdSdCP(int argc, char **argv);
@@ -87,7 +93,7 @@ static const CLI_Command app_commands[] = {
   {"sd", App_CmdSdStatus, "sd status - show SD card info"},
   {"ls", App_CmdSdLS, "ls [path] - list files in directory"},
   {"cd", App_CmdSdCD, "cd [path] - change directory to"},
-  {"tuch", App_CmdSdTUCH, "tuch <text> - make new file with text"},
+  {"touch", App_CmdSdTOUCH, "touch <text> - make new file with text"},
   {"mkdir", App_CmdSdMKDIR, "mkdir [name] - create a directory"},
   {"rm", App_CmdSdRM, "rm [file] - remove file"},
   {"cp", App_CmdSdCP, "cp [source] [destination] - copy file to"},
@@ -106,7 +112,8 @@ static void App_CmdSdStatus(int argc, char **argv)
     return;
   }
 
-  CLI_Print("Work in progress...\r\n");
+  sprintf(text, "SD Card size:\r\n\t%lu MiB\r\n" , sdsizeMB);
+  CLI_Print(text);
 
 }
 
@@ -145,12 +152,10 @@ static void App_CmdSdLS(int argc, char **argv){
 
 
 	        if (fno.fattrib & AM_DIR) {
-
 	            textlen=sprintf(text,"  [DIR]  %s\r\n", fno.fname);
 	            CLI_Print(text);
 	        } else {
-
-	            textlen=sprintf(text,"  %9lu b  %s\r\n", fno.fsize, fno.fname);
+	            textlen=sprintf(text,"  %9lu b  %s\r\n", (uint32_t)fno.fsize, fno.fname);
 	            CLI_Print(text);
 	        }
 	    }
@@ -173,10 +178,11 @@ static void App_CmdSdCD(int argc, char **argv){
 
 
 }
-static void App_CmdSdTUCH(int argc, char **argv){
+
+static void App_CmdSdTOUCH(int argc, char **argv){
 	FIL file;
 	if (argc < 2) {
-	    CLI_Print("Usage: tuch file_name\r\n");
+	    CLI_Print("Usage: touch file_name\r\n");
 	    return;
 	  }
 	if(f_open(&file, argv[1], FA_WRITE | FA_CREATE_NEW)){
@@ -434,7 +440,13 @@ static void App_CmdSdDU(int argc, char **argv){
 	CLI_Print(text);
 
 }
-static void App_CmdSdOPEN_GRAPHIC(int argc, char **argv){}
+static void App_CmdSdOPEN_GRAPHIC(int argc, char **argv){
+	if(argc != 2) {
+		CLI_Print("Usage: open_file filename\r\n");
+		return;
+	}
+	LCD_Display_image(argv[1]);
+}
 
 /* USER CODE END PV */
 
@@ -498,7 +510,7 @@ int main(void)
   BSP_SDRAM_Init();
   BSP_LCD_Init();
 
-  BSP_LCD_LayerDefaultInit(0, LCD_FB_START_ADDRESS);
+  BSP_LCD_LayerDefaultInit(0, (uint32_t)framebuffer);
   BSP_LCD_DisplayOn();
   BSP_LCD_SelectLayer(0);
   BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
@@ -519,23 +531,14 @@ int main(void)
 
   HAL_SD_CardInfoTypeDef sdinfo;
   HAL_SD_GetCardInfo(&hsd1, &sdinfo);
-  uint64_t sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
-  uint32_t sdsizeMB = sdsize/(1024*1024);
+  sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
+  sdsizeMB = sdsize/(1024*1024);
+  fr = f_mount(&fs, SDPath, 0);
 
-  textlen = sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"
+  CLI_Print("====SD card CLI====\r\n");
+  sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"
 		  , sdinfo.CardType, sdinfo.Class, sdsizeMB);
   CLI_Print(text);
-
-
-  FIL file;
-  fr = f_mount(&fs, SDPath, 0);
-  fr = f_open(&file, "test.txt", FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
-  textlen = sprintf(text, "Please insert SD Card...\r\n");
-  fr = f_write(&file, text, textlen, NULL);
-  fr = f_printf(&file, "timestamp: %lu\r\n", HAL_GetTick());
-  fr = f_printf(&file, "Hello\r\n");
-  fr = f_sync(&file);
-  fr = f_close(&file);
 
   CLI_PrintPrompt();
   /* USER CODE END 2 */

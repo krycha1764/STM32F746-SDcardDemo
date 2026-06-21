@@ -45,7 +45,8 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 320K
-  FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
+  FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K
+  EXRAM    (rw)    : ORIGIN = 0xC0000000,   LENGTH = 8M
 }
 
 /* Sections */
@@ -185,4 +186,11 @@ SECTIONS
   }
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
+  
+  .ExternalRAMMemory :
+  {
+    . = ALIGN(4);
+    KEEP(*(.ExternalRAMMemory))
+    . = ALIGN(4);
+  } >EXRAM
 }

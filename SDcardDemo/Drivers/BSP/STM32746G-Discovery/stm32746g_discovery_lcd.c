@@ -1055,7 +1055,8 @@ void BSP_LCD_DrawBitmap(uint32_t Xpos, uint32_t Ypos, uint8_t *pbmp)
   }
   
   /* Bypass the bitmap header */
-  pbmp += (index + (width * (height - 1) * (bit_pixel/8)));  
+  uint32_t line_size = ((bit_pixel * width + 31) / 32) * 4;
+  pbmp += (index + line_size * (height - 1));
   
   /* Convert picture to ARGB8888 pixel format */
   for(index=0; index < height; index++)
@@ -1065,7 +1066,8 @@ void BSP_LCD_DrawBitmap(uint32_t Xpos, uint32_t Ypos, uint8_t *pbmp)
     
     /* Increment the source and destination buffers */
     address+=  (BSP_LCD_GetXSize()*4);
-    pbmp -= width*(bit_pixel/8);
+    //pbmp -= width*(bit_pixel/8);
+    pbmp -= line_size;
   } 
 }
 
