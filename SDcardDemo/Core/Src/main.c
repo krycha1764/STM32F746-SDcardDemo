@@ -90,8 +90,8 @@ static const CLI_Command app_commands[] = {
   {"tuch", App_CmdSdTUCH, "tuch <text> - make new file with text"},
   {"mkdir", App_CmdSdMKDIR, "mkdir [name] - create a directory"},
   {"rm", App_CmdSdRM, "rm [file] - remove file"},
-  {"cp", App_CmdSdCP, "cp [path] [path] - copy file to"},
-  {"mv", App_CmdSdMV, "mv [path] [path] - move file to"},
+  {"cp", App_CmdSdCP, "cp [source] [destination] - copy file to"},
+  {"mv", App_CmdSdMV, "mv [source] [destination] - move file to"},
   {"cat", App_CmdSdCAT, "cat [path] - concatenate files and print on the standard output"},
   {"head", App_CmdSdHEAD, "head [path] - output the first part of files"},
   {"tail", App_CmdSdTAIL, "tail [path] - output the last part of files"},
@@ -134,7 +134,7 @@ static void App_CmdSdLS(int argc, char **argv){
 		}
 	}else{
 		if(!(f_opendir(&dir, argv[1])== FR_OK)){
-			textlen = sprintf(text, "ls: this directory not exist: %s\r\n", argv[1]);
+			textlen = sprintf(text, "ls: this directory does not exist: %s\r\n", argv[1]);
 			CLI_Print(text);
 		}
 	}
@@ -167,7 +167,7 @@ static void App_CmdSdCD(int argc, char **argv){
 
 	res = f_chdir(argv[1]);
 	if (res != FR_OK) {
-		textlen = sprintf(text, "cd: this directory not exist: %s\r\n", argv[1]);
+		textlen = sprintf(text, "cd: this directory does not exist: %s\r\n", argv[1]);
 		CLI_Print(text);
 	}
 
@@ -201,7 +201,7 @@ static void App_CmdSdMKDIR(int argc, char **argv){
 	}
 	switch (f_mkdir(argv[1])){
 	case FR_EXIST:
-		CLI_Print("dir exist\r\n");
+		CLI_Print("directory exist\r\n");
 		break;
 	case FR_OK:
 		break;
@@ -217,10 +217,10 @@ static void App_CmdSdRM(int argc, char **argv){
 		}
 	switch (f_unlink(argv[1])){
 	case FR_NO_FILE:
-		CLI_Print("File not exist\r\n");
+		CLI_Print("File does not exist\r\n");
 		break;
 	case FR_NO_PATH:
-		CLI_Print("Directory not exist\r\n");
+		CLI_Print("Directory does not exist\r\n");
 		break;
 	case FR_DENIED:
 		CLI_Print("Acces denied\r\n");
@@ -233,7 +233,7 @@ static void App_CmdSdRM(int argc, char **argv){
 }
 static void App_CmdSdCP(int argc, char **argv){
 	if (argc < 3) {
-		CLI_Print("Usage: rm source_file destyny_file\r\n");
+		CLI_Print("Usage: rm source_file destination_file\r\n");
 		return;
 	}
 	FIL fsrc;
@@ -248,14 +248,14 @@ static void App_CmdSdCP(int argc, char **argv){
 	}
 
 	if(f_open(&fdst, argv[2], FA_WRITE | FA_CREATE_ALWAYS)){
-		CLI_Print("destiny file make failed\r\n");
+		CLI_Print("destination file make failed\r\n");
 		f_close(&fsrc);
 		return;
 	}
 
 	while(1){
 		if(f_read(&fsrc, buffer, sizeof(buffer), &br)){
-			CLI_Print("saving data failed\r\n");
+			CLI_Print("reading data failed\r\n");
 			break;
 		}
 		if (br == 0) break;
@@ -270,17 +270,17 @@ static void App_CmdSdCP(int argc, char **argv){
 }
 static void App_CmdSdMV(int argc, char **argv){
 	if (argc < 3) {
-		CLI_Print("Usage: mv source_file destyny_file\r\n");
+		CLI_Print("Usage: mv source_file destination_file\r\n");
 		return;
 	}
 	switch (f_rename(argv[1], argv[2])){
 	case FR_OK:
 		break;
 	case FR_NO_FILE:
-		CLI_Print("source file not exsist\r\n");
+		CLI_Print("source file not exist\r\n");
 		break;
 	case FR_NO_PATH:
-		CLI_Print("destiny path not exist\r\n");
+		CLI_Print("destination path does not exist\r\n");
 		break;
 	default:
 		CLI_Print("mv: error\r\n");
@@ -297,7 +297,7 @@ static void App_CmdSdCAT(int argc, char **argv){
 	FIL file;
 	UINT br;
 	if(f_open(&file, argv[1], FA_READ)){
-		CLI_Print("file doesn't exist\r\n");
+		CLI_Print("file does not exist\r\n");
 		return;
 	}
 
@@ -324,13 +324,13 @@ static void App_CmdSdHEAD(int argc, char **argv){
 	UINT br;
 	int line_count = 0;
 	if(f_open(&file, argv[1], FA_READ)){
-			CLI_Print("file doesn't exist\r\n");
+			CLI_Print("file does not exist\r\n");
 			return;
 		}
 
 		while(1){
 			if(f_read(&file, text, sizeof(text) - 1, &br)){
-				CLI_Print("file opening failed\r\n");
+				CLI_Print("file reading failed\r\n");
 				return;
 
 			}
@@ -364,7 +364,7 @@ static void App_CmdSdTAIL(int argc, char **argv){
 		FRESULT res;
 
 		if(f_open(&file, argv[1], FA_READ)){
-				CLI_Print("file doesn't exist\r\n");
+				CLI_Print("file does not exist\r\n");
 				return;
 			}
 			DWORD file_size = f_size(&file);
@@ -381,7 +381,7 @@ static void App_CmdSdTAIL(int argc, char **argv){
 				f_lseek(&file, pos);
 
 				if(f_read(&file, &c, 1, &br)){
-					CLI_Print("file opening failed\r\n");
+					CLI_Print("file reading failed\r\n");
 					return;
 				}
 				if (c == '\n') {
@@ -412,11 +412,11 @@ static void App_CmdSdDU(int argc, char **argv){
 	}
 	FILINFO fno;
 	if(f_stat(argv[1], &fno)){
-		CLI_Print("access dined\r\n");
+		CLI_Print("access denied\r\n");
 		return;
 	}
 	if (fno.fattrib & AM_DIR){
-		CLI_Print("i can't measured directories\r\n");
+		CLI_Print("i can't measure directories\r\n");
 		return;
 	}
 	uint32_t file_bytes = fno.fsize;
