@@ -64,28 +64,45 @@ uint32_t __attribute__((section(".ExternalRAMMemory"))) framebuffer[RK043FN48H_W
 FATFS fs;
 FRESULT fr;
 size_t textlen = 0;
+uint64_t sdsize = 0;
+uint32_t sdsizeMB = 0;
 char text[512] = {0};
+char version[128] = "0.1.1";
 
-//static void App_CmdVersion(int argc, char **argv);
-//static void App_CmdReset(int argc, char **argv);
-//static void App_CmdInfo(int argc, char **argv);
+static void App_CmdVersion(int argc, char **argv);
+static void App_CmdReset(int argc, char **argv);
+static void App_CmdSdPWD(int argc, char **argv);
 static void App_CmdSdStatus(int argc, char **argv);
-//static void App_CmdPath(int argc, char **argv);
-//static void App_CmdType(int argc, char **argv);
-//static void App_CmdAppend(int argc, char **argv);
-//static void App_CmdWrite(int argc, char **argv);
-//static void App_CmdDelete(int argc, char **argv);
+static void App_CmdSdLS(int argc, char **argv);
+static void App_CmdSdCD(int argc, char **argv);
+static void App_CmdSdTUCH(int argc, char **argv);
+static void App_CmdSdMKDIR(int argc, char **argv);
+static void App_CmdSdRM(int argc, char **argv);
+static void App_CmdSdCP(int argc, char **argv);
+static void App_CmdSdMV(int argc, char **argv);
+static void App_CmdSdCAT(int argc, char **argv);
+static void App_CmdSdHEAD(int argc, char **argv);
+static void App_CmdSdTAIL(int argc, char **argv);
+static void App_CmdSdDU(int argc, char **argv);
+static void App_CmdSdOPEN_GRAPHIC(int argc, char **argv);
 
 static const CLI_Command app_commands[] = {
-//  {"version", App_CmdVersion, "Show firmware version"},
-//  {"reset", App_CmdReset, "Perform MCU reset"},
-//  {"info", App_CmdInfo, "Show system information"},
+  {"version", App_CmdVersion, "Show firmware version"},
+  {"reset", App_CmdReset, "Perform MCU reset"},
+  {"pwd", App_CmdSdPWD, "Print the current directory patch"},
   {"sd", App_CmdSdStatus, "sd status - show SD card info"},
-//  {"ls", App_CmdPath, "ls [path] - list files in directory"},
-//  {"type", App_CmdType, "type <file-name> - print file contents"},
-//  {"append", App_CmdAppend, "append <file-name> <text> - append text to file"},
-//  {"write", App_CmdWrite, "write <file-name> <text> - create/overwrite file with text"},
-//  {"delete", App_CmdDelete, "delete <file-name> - remove file"}
+  {"ls", App_CmdSdLS, "ls [path] - list files in directory"},
+  {"cd", App_CmdSdCD, "cd [path] - change directory to"},
+  {"tuch", App_CmdSdTUCH, "tuch <text> - make new file with text"},
+  {"mkdir", App_CmdSdMKDIR, "mkdir [name] - create a directory"},
+  {"rm", App_CmdSdRM, "rm [file] - remove file"},
+  {"cp", App_CmdSdCP, "cp [source] [destination] - copy file to"},
+  {"mv", App_CmdSdMV, "mv [source] [destination] - move file to"},
+  {"cat", App_CmdSdCAT, "cat [path] - concatenate files and print on the standard output"},
+  {"head", App_CmdSdHEAD, "head [path] - output the first part of files"},
+  {"tail", App_CmdSdTAIL, "tail [path] - output the last part of files"},
+  {"du", App_CmdSdDU, "du [path] - estimate file space usage"},
+  {"open_file", App_CmdSdOPEN_GRAPHIC, "nie wiem, Mikołaj to dla Ciebie funkcja do grafiki"},
 };
 // Polecenie CLI: sd status
 static void App_CmdSdStatus(int argc, char **argv)
@@ -95,9 +112,337 @@ static void App_CmdSdStatus(int argc, char **argv)
     return;
   }
 
-  CLI_Print("Work in progress...\r\n");
+  sprintf(text, "SD Card size:\r\n\t%lu MiB\r\n" , sdsizeMB);
+  CLI_Print(text);
 
 }
+
+static void App_CmdVersion(int argc, char **argv){
+	textlen = sprintf(text, "software version: \r\n %s \r\n", version);
+	CLI_Print(text);
+}
+
+static void App_CmdReset(int argc, char **argv){
+	NVIC_SystemReset();
+}
+static void App_CmdSdPWD(int argc, char **argv){
+	f_getcwd(text, 512);
+	CLI_Print(text);
+}
+static void App_CmdSdLS(int argc, char **argv){
+	static FILINFO fno;
+	DIR dir;
+	FRESULT res;
+
+	if ((argc < 2) || (strcmp(argv[1],".")==0)){
+		if(f_opendir(&dir, ".")){
+			CLI_Print("Open Error");
+			return;
+		}
+	}else{
+		if(!(f_opendir(&dir, argv[1])== FR_OK)){
+			textlen = sprintf(text, "ls: this directory does not exist: %s\r\n", argv[1]);
+			CLI_Print(text);
+		}
+	}
+
+	for (;;) {
+	        res = f_readdir(&dir, &fno);
+	        if (res != FR_OK || fno.fname[0] == 0) break;
+
+
+	        if (fno.fattrib & AM_DIR) {
+
+	            textlen=sprintf(text,"  [DIR]  %s\r\n", fno.fname);
+	            CLI_Print(text);
+	        } else {
+
+	            textlen=sprintf(text,"  %9llu b  %s\r\n", fno.fsize, fno.fname);
+	            CLI_Print(text);
+	        }
+	    }
+
+	    f_closedir(&dir);
+}
+
+static void App_CmdSdCD(int argc, char **argv){
+	if (argc < 2) {
+	    CLI_Print("Usage: cd [directory]\r\n");
+	    return;
+	}
+	FRESULT res;
+
+	res = f_chdir(argv[1]);
+	if (res != FR_OK) {
+		textlen = sprintf(text, "cd: this directory does not exist: %s\r\n", argv[1]);
+		CLI_Print(text);
+	}
+
+
+}
+static void App_CmdSdTUCH(int argc, char **argv){
+	FIL file;
+	if (argc < 2) {
+	    CLI_Print("Usage: tuch file_name\r\n");
+	    return;
+	  }
+	if(f_open(&file, argv[1], FA_WRITE | FA_CREATE_NEW)){
+		CLI_Print("file make error");
+		return;
+	}
+	if (argc >= 3) {
+	        for (int i = 2; i < argc; i++) {
+	            f_printf(&file, "%s", argv[i]);
+	            if (i < argc - 1) {
+	                f_printf(&file, " ");
+	            }
+	        }
+	f_printf(&file, "\r\n");
+	}
+	f_close(&file);
+}
+static void App_CmdSdMKDIR(int argc, char **argv){
+	if (argc < 2) {
+		    CLI_Print("Usage: mkdir directory_name\r\n");
+		    return;
+	}
+	switch (f_mkdir(argv[1])){
+	case FR_EXIST:
+		CLI_Print("directory exist\r\n");
+		break;
+	case FR_OK:
+		break;
+	default:
+		CLI_Print("mkdir error\r\n");
+	}
+
+}
+static void App_CmdSdRM(int argc, char **argv){
+	if (argc < 2) {
+			    CLI_Print("Usage: rm file_name\r\n");
+			    return;
+		}
+	switch (f_unlink(argv[1])){
+	case FR_NO_FILE:
+		CLI_Print("File does not exist\r\n");
+		break;
+	case FR_NO_PATH:
+		CLI_Print("Directory does not exist\r\n");
+		break;
+	case FR_DENIED:
+		CLI_Print("Acces denied\r\n");
+		break;
+	case FR_OK:
+		break;
+	default:
+		CLI_Print("rm: error\r\n");
+	}
+}
+static void App_CmdSdCP(int argc, char **argv){
+	if (argc < 3) {
+		CLI_Print("Usage: rm source_file destination_file\r\n");
+		return;
+	}
+	FIL fsrc;
+	FIL fdst;
+	UINT br, bw;
+	static BYTE buffer[512];
+
+	if(f_open(&fsrc, argv[1], FA_READ)){
+		CLI_Print("source file open failed\r\n");
+		f_close(&fsrc);
+		return;
+	}
+
+	if(f_open(&fdst, argv[2], FA_WRITE | FA_CREATE_ALWAYS)){
+		CLI_Print("destination file make failed\r\n");
+		f_close(&fsrc);
+		return;
+	}
+
+	while(1){
+		if(f_read(&fsrc, buffer, sizeof(buffer), &br)){
+			CLI_Print("reading data failed\r\n");
+			break;
+		}
+		if (br == 0) break;
+		if(f_write(&fdst, buffer, br, &bw)){
+			CLI_Print("saving data failed\r\n");
+			break;
+		}
+	}
+	f_close(&fsrc);
+	f_close(&fdst);
+
+}
+static void App_CmdSdMV(int argc, char **argv){
+	if (argc < 3) {
+		CLI_Print("Usage: mv source_file destination_file\r\n");
+		return;
+	}
+	switch (f_rename(argv[1], argv[2])){
+	case FR_OK:
+		break;
+	case FR_NO_FILE:
+		CLI_Print("source file not exist\r\n");
+		break;
+	case FR_NO_PATH:
+		CLI_Print("destination path does not exist\r\n");
+		break;
+	default:
+		CLI_Print("mv: error\r\n");
+
+
+	}
+
+}
+static void App_CmdSdCAT(int argc, char **argv){
+	if (argc < 2) {
+		CLI_Print("Usage: cat file \r\n");
+		return;
+	}
+	FIL file;
+	UINT br;
+	if(f_open(&file, argv[1], FA_READ)){
+		CLI_Print("file does not exist\r\n");
+		return;
+	}
+
+	while(1){
+		if(f_read(&file, text, sizeof(text) - 1, &br)){
+			CLI_Print("file opening failed\r\n");
+			return;
+		}
+		if (br == 0) break;
+		text[br]='\0';
+		CLI_Print(text);
+	}
+	f_close(&file);
+	CLI_Print("\r\n");
+
+}
+static void App_CmdSdHEAD(int argc, char **argv){
+	if (argc < 2) {
+			CLI_Print("Usage: head file [line_number] \r\n");
+			return;
+		}
+	int req_lines = (argc >= 3) ? atoi(argv[2]) : 10;
+	FIL file;
+	UINT br;
+	int line_count = 0;
+	if(f_open(&file, argv[1], FA_READ)){
+			CLI_Print("file does not exist\r\n");
+			return;
+		}
+
+		while(1){
+			if(f_read(&file, text, sizeof(text) - 1, &br)){
+				CLI_Print("file reading failed\r\n");
+				return;
+
+			}
+			if(br == 0) break;
+			for (UINT i = 0; i < br; i++) {
+				if (text[i] == '\n') {
+					line_count++;
+					if (line_count >= req_lines) {
+						text[i + 1] = '\0';
+			            br = i + 1;
+			            break;
+			        }
+				}
+			}
+			text[br] = '\0';
+				CLI_Print(text);
+			    if (line_count >= req_lines) break;
+		}
+	f_close(&file);
+	CLI_Print("\r\n");
+
+}
+static void App_CmdSdTAIL(int argc, char **argv){
+	if (argc < 2) {
+				CLI_Print("Usage: tail file [line_number] \r\n");
+				return;
+			}
+		int req_lines = (argc >= 3) ? atoi(argv[2]) : 10;
+		FIL file;
+		UINT br;
+		FRESULT res;
+
+		if(f_open(&file, argv[1], FA_READ)){
+				CLI_Print("file does not exist\r\n");
+				return;
+			}
+			DWORD file_size = f_size(&file);
+		    if (file_size == 0) {
+		        f_close(&file);
+		        return;
+		    }
+			DWORD pos = file_size;
+		    int lines_found = 0;
+		    char c;
+
+			while(pos>0){
+				pos--;
+				f_lseek(&file, pos);
+
+				if(f_read(&file, &c, 1, &br)){
+					CLI_Print("file reading failed\r\n");
+					return;
+				}
+				if (c == '\n') {
+					if (pos < file_size - 1) {
+						lines_found++;
+						if (lines_found > req_lines) {
+							pos++;
+							break;
+						}
+					}
+				}
+			}
+			f_lseek(&file, pos);
+			for (;;) {
+				res = f_read(&file, text, sizeof(text) - 1, &br);
+				if (res != FR_OK || br == 0) break;
+				text[br] = '\0';
+				CLI_Print(text);
+			}
+			f_close(&file);
+			CLI_Print("\r\n");
+
+}
+static void App_CmdSdDU(int argc, char **argv){
+	if (argc < 2) {
+		CLI_Print("Usage: du file_name \r\n");
+		return;
+	}
+	FILINFO fno;
+	if(f_stat(argv[1], &fno)){
+		CLI_Print("access denied\r\n");
+		return;
+	}
+	if (fno.fattrib & AM_DIR){
+		CLI_Print("i can't measure directories\r\n");
+		return;
+	}
+	uint32_t file_bytes = fno.fsize;
+
+	if (file_bytes < 1024) {
+	        textlen = sprintf(text, "%lu B\t%s\r\n", (unsigned long)file_bytes, argv[1]);
+	    } else if (file_bytes < 1024 * 1024) {
+	        textlen = sprintf(text, "%lu KB\t%s\r\n", (unsigned long)(file_bytes / 1024), argv[1]);
+	    } else {
+	        unsigned long mb = (unsigned long)(file_bytes / (1024 * 1024));
+	        unsigned long kb_remainder = (unsigned long)((file_bytes % (1024 * 1024)) / 102400);
+	        textlen = sprintf(text, "%lu.%lu MB\t%s\r\n", mb, kb_remainder, argv[1]);
+	    }
+
+	CLI_Print(text);
+
+}
+static void App_CmdSdOPEN_GRAPHIC(int argc, char **argv){}
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -181,26 +526,15 @@ int main(void)
 
   HAL_SD_CardInfoTypeDef sdinfo;
   HAL_SD_GetCardInfo(&hsd1, &sdinfo);
-  uint64_t sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
-  uint32_t sdsizeMB = sdsize/(1024*1024);
+  sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
+  sdsizeMB = sdsize/(1024*1024);
 
-  textlen = sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"
+  CLI_Print("====SD card CLI====\r\n");
+  sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"
 		  , sdinfo.CardType, sdinfo.Class, sdsizeMB);
   CLI_Print(text);
 
-
-  FIL file;
-  fr = f_mount(&fs, SDPath, 0);
-  fr = f_open(&file, "test.txt", FA_CREATE_ALWAYS | FA_WRITE | FA_READ);
-  textlen = sprintf(text, "Please insert SD Card...\r\n");
-  fr = f_write(&file, text, textlen, NULL);
-  fr = f_printf(&file, "timestamp: %lu\r\n", HAL_GetTick());
-  fr = f_printf(&file, "Hello\r\n");
-  fr = f_sync(&file);
-  fr = f_close(&file);
-
   CLI_PrintPrompt();
-  LCD_Display_image("papaj.bmp");
   /* USER CODE END 2 */
 
   /* Infinite loop */
