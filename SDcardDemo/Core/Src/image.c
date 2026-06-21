@@ -15,7 +15,6 @@
 
 static uint8_t __attribute__((section(".ExternalRAMMemory"))) line[RK043FN48H_WIDTH * 4];
 uint8_t __attribute__((section(".ExternalRAMMemory"))) bitmap[RK043FN48H_WIDTH * RK043FN48H_HEIGHT * 4 + 150];
-//static uint8_t line[RK043FN48H_WIDTH * 4];
 extern uint32_t framebuffer[];
 
 static char textbuff[256] = {0};
@@ -27,7 +26,6 @@ static char textbuff[256] = {0};
 static int8_t LCD_Display_BMP(FIL* file);
 static int8_t LCD_Display_JPG(FIL* file);
 static int8_t LCD_Display_PNG(FIL* file);
-static void LL_ConvertLineToARGB8888(void *pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode);
 
 int8_t LCD_Display_image(const char* filename) {
 	FIL file;
@@ -117,32 +115,4 @@ static int8_t LCD_Display_PNG(FIL* file) {
 	int8_t ret = 0;
 	CLI_Print("Not done yet\n");
 	return ret;
-}
-
-static void LL_ConvertLineToARGB8888(void *pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode) {
-  /* Configure the DMA2D Mode, Color Mode and output offset */
-	hdma2d.Init.Mode         = DMA2D_M2M_PFC;
-	hdma2d.Init.ColorMode    = DMA2D_ARGB8888;
-	hdma2d.Init.OutputOffset = 0;
-
-  /* Foreground Configuration */
-	hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-	hdma2d.LayerCfg[1].InputAlpha = 0xFF;
-	hdma2d.LayerCfg[1].InputColorMode = ColorMode;
-	hdma2d.LayerCfg[1].InputOffset = 0;
-
-	hdma2d.Instance = DMA2D;
-
-  /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hdma2d) == HAL_OK)
-  {
-    if(HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK)
-    {
-      if (HAL_DMA2D_Start(&hdma2d, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
-      {
-        /* Polling For DMA transfer */
-        HAL_DMA2D_PollForTransfer(&hdma2d, 10);
-      }
-    }
-  }
 }
