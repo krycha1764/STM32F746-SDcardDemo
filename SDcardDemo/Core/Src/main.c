@@ -441,7 +441,13 @@ static void App_CmdSdDU(int argc, char **argv){
 	CLI_Print(text);
 
 }
-static void App_CmdSdOPEN_GRAPHIC(int argc, char **argv){}
+static void App_CmdSdOPEN_GRAPHIC(int argc, char **argv){
+	if(argc != 2) {
+		CLI_Print("Usage: open_file filename\r\n");
+		return;
+	}
+	LCD_Display_image(argv[1]);
+}
 
 /* USER CODE END PV */
 
@@ -528,6 +534,7 @@ int main(void)
   HAL_SD_GetCardInfo(&hsd1, &sdinfo);
   sdsize = (uint64_t)sdinfo.BlockNbr * (uint64_t)sdinfo.BlockSize;
   sdsizeMB = sdsize/(1024*1024);
+  fr = f_mount(&fs, SDPath, 0);
 
   CLI_Print("====SD card CLI====\r\n");
   sprintf(text, "SD Card info:\r\n\tType: %lu\r\n\tClass: %lu\r\n\tSize: %lu MiB\r\n"

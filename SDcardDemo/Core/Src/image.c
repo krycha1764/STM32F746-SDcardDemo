@@ -34,7 +34,7 @@ int8_t LCD_Display_image(const char* filename) {
 
 	fres = f_open(&file, filename, FA_READ);
 	if(fres != FR_OK) {
-		sprintf(textbuff, "Error opening %s file\n", filename);
+		sprintf(textbuff, "Error opening %s file\r\n", filename);
 		CLI_Print(textbuff);
 		ret = -1;
 		goto error;
@@ -44,7 +44,7 @@ int8_t LCD_Display_image(const char* filename) {
 	unsigned int to_read = 2;
 	fres = f_read(&file, (uint8_t*)&header, to_read, &to_read);
 	if((fres != FR_OK) || (to_read != 2)) {
-		sprintf(textbuff, "Error reading %s file\n", filename);
+		sprintf(textbuff, "Error reading %s file\r\n", filename);
 		CLI_Print(textbuff);
 		ret = -1;
 		goto error;
@@ -52,19 +52,19 @@ int8_t LCD_Display_image(const char* filename) {
 	f_rewind(&file);
 	switch(header) {
 	case BMP_header:
-		CLI_Print("BMP image\n");
+		CLI_Print("BMP image\r\n");
 		ret = LCD_Display_BMP(&file);
 		break;
 	case JPG_header:
-		CLI_Print("JPG image\n");
+		CLI_Print("JPG image\r\n");
 		ret = LCD_Display_JPG(&file);
 		break;
 	case PNG_header:
-		CLI_Print("PNG image\n");
+		CLI_Print("PNG image\r\n");
 		ret = LCD_Display_PNG(&file);
 		break;
 	default:
-		CLI_Print("Unknown image type\n");
+		CLI_Print("Unknown image type\r\n");
 		ret = -1;
 		break;
 	}
@@ -82,21 +82,21 @@ static int8_t LCD_Display_BMP(FIL* file) {
 	unsigned int to_read = 30;
 	fres = f_read(file, line, to_read, &to_read);
 	if((fres != FR_OK) || (to_read != 30)) {
-		CLI_Print("Error reading file\n");
+		CLI_Print("Error reading file\r\n");
 		ret = -2; goto error;
 	}
 	width = line[18] + (line[19] << 8) + (line[20] << 16)  + (line[21] << 24);
 	height = line[22] + (line[23] << 8) + (line[24] << 16)  + (line[25] << 24);
 
 	if((width > RK043FN48H_WIDTH) || (height > RK043FN48H_HEIGHT)) {
-		CLI_Print("Image too large\n");
+		CLI_Print("Image too large\r\n");
 		ret = -2; goto error;
 	}
 
 	f_lseek(file, 0);
 	fres = f_read(file, bitmap, f_size(file), NULL);
 	if(fres != FR_OK) {
-		CLI_Print("Error reading file\n");
+		CLI_Print("Error reading file\r\n");
 		ret = -2; goto error;
 	}
 	BSP_LCD_DrawBitmap(0, 0, bitmap);
@@ -107,12 +107,12 @@ error:
 
 static int8_t LCD_Display_JPG(FIL* file) {
 	int8_t ret = 0;
-	CLI_Print("Not done yet\n");
+	CLI_Print("Not done yet\r\n");
 	return ret;
 }
 
 static int8_t LCD_Display_PNG(FIL* file) {
 	int8_t ret = 0;
-	CLI_Print("Not done yet\n");
+	CLI_Print("Not done yet\r\n");
 	return ret;
 }
