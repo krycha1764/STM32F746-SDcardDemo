@@ -20,7 +20,7 @@ whatis jak nas bardzo poniesie
 
     + cd (Change Directory) – zmienia bieżący katalog. - w górę musi pamiętać w dół bierze od karty
 
-    + + tree - jak nam się będzie nudzić to można dodać ale to trzeba przebiec całą kartę praktycznie
+    + + **tree** - jak nam się będzie nudzić to można dodać ale to trzeba przebiec całą kartę praktycznie
 
 2. Tworzenie i usuwanie
 
