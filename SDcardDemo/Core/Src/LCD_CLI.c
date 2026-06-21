@@ -11,6 +11,7 @@
 #include <string.h>
 
 static int16_t column = 0;
+extern uint32_t framebuffer[];
 
 void LL_FillBuffer(uint32_t LayerIndex, void *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t ColorIndex);
 
@@ -31,10 +32,10 @@ void LCD_CLI_NL() {
 
 	HAL_DMA2D_Init(&hdma2d);
 	HAL_DMA2D_ConfigLayer(&hdma2d, 1);
-	HAL_DMA2D_Start(&hdma2d, (uint32_t)0xC0000000 + (4*(480*16)), (uint32_t)0xC0000000, 480, 256);
+	HAL_DMA2D_Start(&hdma2d, (uint32_t)framebuffer + (4*(480*16)), (uint32_t)framebuffer, 480, 256);
 	HAL_DMA2D_PollForTransfer(&hdma2d, 10);
 
-	LL_FillBuffer(1,(uint32_t*)(0xC0000000 + (4*480*16*16)) , 480, 16, 0, LCD_COLOR_BLACK);
+	LL_FillBuffer(1,(uint32_t*)(framebuffer + (480*(272-16))) , 480, 16, 0, LCD_COLOR_BLACK);
 	column = 0;
 }
 
