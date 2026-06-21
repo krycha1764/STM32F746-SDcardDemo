@@ -150,7 +150,7 @@ static void App_CmdSdLS(int argc, char **argv){
 	            CLI_Print(text);
 	        } else {
 
-	            textlen=sprintf(text,"  %9llu b  %s\r\n", fno.fsize, fno.fname);
+	            textlen=sprintf(text,"  %9lu b  %s\r\n", fno.fsize, fno.fname);
 	            CLI_Print(text);
 	        }
 	    }
