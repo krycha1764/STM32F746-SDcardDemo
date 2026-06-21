@@ -75,7 +75,7 @@ static void App_CmdSdPWD(int argc, char **argv);
 static void App_CmdSdStatus(int argc, char **argv);
 static void App_CmdSdLS(int argc, char **argv);
 static void App_CmdSdCD(int argc, char **argv);
-static void App_CmdSdTUCH(int argc, char **argv);
+static void App_CmdSdTOUCH(int argc, char **argv);
 static void App_CmdSdMKDIR(int argc, char **argv);
 static void App_CmdSdRM(int argc, char **argv);
 static void App_CmdSdCP(int argc, char **argv);
@@ -93,7 +93,7 @@ static const CLI_Command app_commands[] = {
   {"sd", App_CmdSdStatus, "sd status - show SD card info"},
   {"ls", App_CmdSdLS, "ls [path] - list files in directory"},
   {"cd", App_CmdSdCD, "cd [path] - change directory to"},
-  {"tuch", App_CmdSdTUCH, "tuch <text> - make new file with text"},
+  {"touch", App_CmdSdTOUCH, "touch <text> - make new file with text"},
   {"mkdir", App_CmdSdMKDIR, "mkdir [name] - create a directory"},
   {"rm", App_CmdSdRM, "rm [file] - remove file"},
   {"cp", App_CmdSdCP, "cp [source] [destination] - copy file to"},
@@ -180,10 +180,10 @@ static void App_CmdSdCD(int argc, char **argv){
 
 
 }
-static void App_CmdSdTUCH(int argc, char **argv){
+static void App_CmdSdTOUCH(int argc, char **argv){
 	FIL file;
 	if (argc < 2) {
-	    CLI_Print("Usage: tuch file_name\r\n");
+	    CLI_Print("Usage: touch file_name\r\n");
 	    return;
 	  }
 	if(f_open(&file, argv[1], FA_WRITE | FA_CREATE_NEW)){
