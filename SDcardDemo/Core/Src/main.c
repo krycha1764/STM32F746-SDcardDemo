@@ -102,7 +102,7 @@ static const CLI_Command app_commands[] = {
   {"head", App_CmdSdHEAD, "head [path] - output the first part of files"},
   {"tail", App_CmdSdTAIL, "tail [path] - output the last part of files"},
   {"du", App_CmdSdDU, "du [path] - estimate file space usage"},
-  {"open_file", App_CmdSdOPEN_GRAPHIC, "nie wiem, Mikołaj to dla Ciebie funkcja do grafiki"},
+  {"open_file", App_CmdSdOPEN_GRAPHIC, "open_file [path] - display image on LCD"},
 };
 // Polecenie CLI: sd status
 static void App_CmdSdStatus(int argc, char **argv)
